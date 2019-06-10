@@ -26,6 +26,8 @@
 
 /* ========================== OBJECTFIT IE11 ========================== */
 // objectFitImages()
+
+/* =======  EXAMPLE OBJECTFIT CSS ======= */
 // .your-favorite-image {
 //   object-fit: cover;
 //   object-position: bottom;
