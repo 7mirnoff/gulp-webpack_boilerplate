@@ -16,8 +16,6 @@ import cssnano from 'gulp-cssnano'
 import webpackStream from 'webpack-stream'
 import webpack from 'webpack'
 
-const dist = process.argv.includes(`dev`) ? `dev-server` : `dist`
-
 const path = {
   src: {
     html: `src/html/views/*.html`,
@@ -29,25 +27,25 @@ const path = {
     libs: `src/libs/**/*`
   },
   dist: {
-    html: dist,
-    css: `${dist}/css`,
-    js: `${dist}/js`,
-    img: `${dist}/img`,
-    fonts: `${dist}/fonts`,
-    favicon: `${dist}/favicon`,
-    libs: `${dist}/libs`
+    html: `dist`,
+    css: `dist/css`,
+    js: `dist/js`,
+    img: `dist/img`,
+    fonts: `dist/fonts`,
+    favicon: `dist/favicon`,
+    libs: `dist/libs`
   },
   watch: {
     html: `src/html/**/*.html`,
     scss: `src/scss/**/*.scss`,
     js: `src/js/**/*.js`
   },
-  clean: dist,
-  cleanAll: [`dev-server`, `dist`]
+  clean: `dist`,
+  browserSyncWatch: `dist/**/*`
 }
 
 const webpackConfig = {
-  mode: process.argv.includes(`dev`) ? `development` : `production`,
+  mode: process.argv.includes(`prod`) ? `production` : `development`,
   output: {
     filename: `bundle.js`
   },
@@ -62,19 +60,13 @@ const webpackConfig = {
         loader: `file-loader`,
         options: {
           name: `../assets/[name].[ext]`,
-          publicPath: dist
+          publicPath: `dist`
         }
       }
     ]
   },
   performance: {
     hints: false
-  },
-  resolve: {
-    extensions: [`.js`, `.vue`, `.json`],
-    alias: {
-      vue$: `vue/${dist}/vue.esm.js`
-    }
   },
   optimization: {
     splitChunks: {
@@ -93,8 +85,8 @@ const webpackConfig = {
 }
 
 const sourseMap = new webpack.SourceMapDevToolPlugin({
-  filename: `[file].map`,
-  exclude: `vendors.js`
+  filename: '[file].map',
+  exclude: 'vendors.js'
 })
 
 process.argv.includes(`dev`) && webpackConfig.plugins.push(sourseMap)
@@ -165,8 +157,6 @@ task(`server`, () =>
 )
 
 task(`clean`, () => del(path.clean))
-
-task(`clean-all`, () => del(path.cleanAll))
 
 task(`watch`, () => {
   watch(path.watch.html, series(`html`))
