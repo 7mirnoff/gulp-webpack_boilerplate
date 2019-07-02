@@ -1,6 +1,6 @@
 /* ========================== regenerator-runtime for async await ========================== */
 // import 'regenerator-runtime/runtime'
-// import 'core-js/stable'
+import 'core-js/stable'
 
 // import 'core-js/features/array/from'
 // import 'core-js/features/set'

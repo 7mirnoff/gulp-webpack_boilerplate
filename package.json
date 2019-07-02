@@ -1,11 +1,12 @@
 {
   "name": "frontend-builder",
   "version": "1.0.1",
-  "description": "Шаблон для сборки сайтов",
+  "description": "0",
   "main": "",
   "scripts": {
     "dev": "gulp dev",
     "prod": "gulp prod",
+    "zip": "gulp archive",
     "clean": "gulp clean-all"
   },
   "author": "Bono Digital",
@@ -36,6 +37,7 @@
     "gulp-postcss": "^8.0.0",
     "gulp-rename": "^1.4.0",
     "gulp-sass": "^4.0.2",
+    "gulp-zip": "^5.0.0",
     "object-fit-images": "^3.2.4",
     "regenerator-runtime": "^0.13.2",
     "sort-css-media-queries": "^1.4.3",

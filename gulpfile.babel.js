@@ -13,93 +13,42 @@ import mqpacker from 'css-mqpacker'
 import sortCSSmq from 'sort-css-media-queries'
 import autoprefixer from 'gulp-autoprefixer'
 import cssnano from 'gulp-cssnano'
+import zip from 'gulp-zip'
+import { name } from './package.json'
+import version from './version.json'
+import fs from 'fs'
 import webpackStream from 'webpack-stream'
 import webpack from 'webpack'
+import getWebpackConfig from './webpack.config'
 
 const dist = process.argv.includes(`dev`) ? `dev-server` : `dist`
+
+const webpackConfig = getWebpackConfig(dist)
 
 const path = {
   src: {
     html: `src/html/views/*.html`,
     scss: `src/scss/main.scss`,
     js: `src/js/main.js`,
-    img: `src/img/**/*`,
-    video: `src/video/**/*`,
-    fonts: `src/fonts/**/*`,
-    favicon: `src/favicon/**/*`,
-    libs: `src/libs/**/*`,
-    shaders: `src/**/*.{frag,vert}`
+    shaders: `src/**/*.{frag,vert,glsl}`,
+    assets: `src/assets/**/*`,
+    rootFiles: `src/root-files/**/*`
   },
   dist: {
     html: dist,
     css: `${dist}/css`,
     js: `${dist}/js`,
-    img: `${dist}/img`,
-    video: `${dist}/video`,
-    fonts: `${dist}/fonts`,
-    favicon: `${dist}/favicon`,
-    libs: `${dist}/libs`
+    assets: `${dist}/assets`
   },
   watch: {
     html: `src/html/**/*.html`,
     scss: `src/scss/**/*.scss`,
     js: `src/js/**/*.js`
   },
+  allFiles: `dist/**/*`,
+  archive: `archive`,
   clean: dist,
   cleanAll: [`dev-server`, `dist`]
-}
-
-const webpackConfig = {
-  mode: process.argv.includes(`dev`) ? `development` : `production`,
-  output: {
-    filename: `bundle.js`
-  },
-  module: {
-    rules: [
-      {
-        test: /\.(js)$/,
-        loader: `babel-loader`,
-        exclude: /(node_modules)/
-      }, {
-        test: /\.(gif|png|jpe?g|svg|glb|fbx)$/i,
-        loader: `file-loader`,
-        options: {
-          name: `../assets/[name].[ext]`,
-          publicPath: dist
-        }
-      }, {
-        test: /\.(frag|vert|glsl)$/,
-        use: [
-          {
-            loader: 'glsl-shader-loader'
-          }
-        ]
-      }
-    ]
-  },
-  performance: {
-    hints: false
-  },
-  resolve: {
-    extensions: [`.js`, `.vue`, `.json`],
-    alias: {
-      vue$: `vue/${dist}/vue.esm.js`
-    }
-  },
-  optimization: {
-    splitChunks: {
-      cacheGroups: {
-        vendor: {
-          filename: `vendors.js`,
-          test: /node_modules/,
-          chunks: `all`,
-          enforce: true
-        }
-      }
-    }
-  },
-  plugins: [],
-  devtool: false
 }
 
 const sourseMap = new webpack.SourceMapDevToolPlugin({
@@ -132,7 +81,6 @@ task(`scss`, () =>
 task(`cssmin`, () =>
   src(`${path.dist.css}/**/*.css`)
     .pipe(cssnano({ zindex: false }))
-    .pipe(rename((path) => { path.basename += `.min` }))
     .pipe(dest(path.dist.css))
 )
 
@@ -144,32 +92,15 @@ task(`js`, () =>
     .pipe(browserSync.stream())
 )
 
-task(`img`, () =>
-  src(path.src.img)
-    .pipe(dest(path.dist.img))
+task(`assets`, () =>
+  src(path.src.assets)
+    .pipe(dest(path.dist.assets))
     .pipe(browserSync.stream())
 )
 
-task(`video`, () =>
-  src(path.src.video)
-    .pipe(dest(path.dist.video))
-    .pipe(browserSync.stream())
-)
-
-task(`fonts`, () =>
-  src(path.src.fonts)
-    .pipe(dest(path.dist.fonts))
-    .pipe(browserSync.stream())
-)
-
-task(`favicon`, () =>
-  src(path.src.favicon)
-    .pipe(dest(path.dist.favicon))
-)
-
-task(`libs`, () =>
-  src(path.src.libs)
-    .pipe(dest(path.dist.libs))
+task(`root-files`, () =>
+  src(path.src.rootFiles)
+    .pipe(dest(path.dist.html))
     .pipe(browserSync.stream())
 )
 
@@ -180,6 +111,18 @@ task(`server`, () =>
   })
 )
 
+task('zip', (done) => {
+  let count = version.count || 0
+
+  src(path.allFiles)
+    .pipe(zip(`${name || `folder`}-v${count}.zip`))
+    .pipe(dest(path.archive))
+
+  version.count = ++count
+  fs.writeFileSync(`version.json`, JSON.stringify(version), `utf8`)
+  done()
+})
+
 task(`clean`, () => del(path.clean))
 
 task(`clean-all`, () => del(path.cleanAll))
@@ -189,15 +132,14 @@ task(`watch`, () => {
   watch(path.watch.scss, series(`scss`))
   watch(path.watch.js, series(`js`))
   watch(path.src.shaders, series(`js`))
-  watch(path.src.img, series(`img`))
-  watch(path.src.video, series(`video`))
-  watch(path.src.fonts, series(`fonts`))
-  watch(path.src.favicon, series(`favicon`))
-  watch(path.src.libs, series(`libs`))
+  watch(path.src.assets, series(`assets`))
+  watch(path.src.rootFiles, series(`root-files`))
 })
 
-const tasks = [`html`, `js`, `scss`, `img`, `fonts`, `favicon`, `libs`]
+const tasks = [`html`, `js`, `scss`, `assets`, `root-files`]
 
 task(`dev`, series(`clean`, ...tasks, parallel(`server`, `watch`)))
 
 task(`prod`, series(`clean`, parallel(...tasks), `cssmin`))
+
+task(`archive`, series(`prod`, `zip`))
