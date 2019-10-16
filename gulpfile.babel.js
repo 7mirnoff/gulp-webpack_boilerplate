@@ -111,7 +111,7 @@ task(`server`, () =>
   })
 )
 
-task('zip', (done) => {
+task(`zip`, (done) => {
   let count = version.count || 0
 
   src(path.allFiles)
@@ -139,7 +139,5 @@ task(`watch`, () => {
 const tasks = [`html`, `js`, `scss`, `assets`, `root-files`]
 
 task(`dev`, series(`clean`, ...tasks, parallel(`server`, `watch`)))
-
 task(`prod`, series(`clean`, parallel(...tasks), `cssmin`))
-
 task(`archive`, series(`prod`, `zip`))
