@@ -21,7 +21,7 @@ export default (dist) => ({
         test: /\.(frag|vert|glsl)$/,
         use: [
           {
-            loader: 'glsl-shader-loader'
+            loader: `lsl-shader-loader`
           }
         ]
       }
@@ -48,6 +48,5 @@ export default (dist) => ({
       }
     }
   },
-  plugins: [],
   devtool: false
 })
